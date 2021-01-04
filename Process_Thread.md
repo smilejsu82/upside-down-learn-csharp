@@ -302,11 +302,65 @@ namespace thread
 
 ## Thread의 생명주기
 
-| 상태          | 설명                                                                                                                                                                             |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unstarted     | 쓰레드 객체를 생성한후 Thread.Start()메서드가 호출되기 전 상태                                                                                                                   |
-| Running       | 쓰레드가 시작하여 동작중인 상태<br> Unstarted상태의 쓰레드를 Thread.Start()메서드를 통해 이 상태로 만들수 있음                                                                   |
-| Suspended     | 쓰레드의 일시 중단 상태<br>쓰레드를 Thread.Suspended()메서드를통해 이상태로 만들수 있음<br> Suspended상태인 쓰레드는 Thread.Resume()메서드를 통해 다시 Running상태로 만들수 있음 |
-| WaitSleepJoin | 쓰레드가 블록(Block)된 상태<br>Monitor.Enter(), Thread.Sleep(), Thread.Join()메서드를 호출하면 이상태가 됨                                                                       |
-| Aborted       | 쓰레드가 취소된 상태<br>Aborted된 쓰레드는 다시 Stopped상태로 전환되어 완전히 중지 한다.                                                                                         |
-| Stopped       | 중지된 쓰레드의 상태<br>Abort()메서드를 호출하거나 쓰레드가 실행중인 메서드가 종료 되면 이상태가 됨                                                                              |
+| 상태          | 설명                                                                                                                                                                                                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unstarted     | 쓰레드 객체를 생성한후 Thread.Start()메서드가 호출되기 전 상태                                                                                                                                                                                                                                                                                            |
+| Running       | 쓰레드가 시작하여 동작중인 상태<br> Unstarted상태의 쓰레드를 Thread.Start()메서드를 통해 이 상태로 만들수 있음                                                                                                                                                                                                                                            |
+| Suspended     | 쓰레드의 일시 중단 상태<br>쓰레드를 Thread.Suspended()메서드를통해 이상태로 만들수 있음<br> Suspended상태인 쓰레드는 Thread.Resume()메서드를 통해 다시 Running상태로 만들수 있음                                                                                                                                                                          |
+| WaitSleepJoin | 쓰레드가 블록(Block)된 상태<br>Monitor.Enter(), Thread.Sleep(), Thread.Join()메서드를 호출하면 이상태가 됨                                                                                                                                                                                                                                                |
+| Aborted       | 쓰레드가 취소된 상태<br>Aborted된 쓰레드는 다시 Stopped상태로 전환되어 완전히 중지 한다.                                                                                                                                                                                                                                                                  |
+| Stopped       | 중지된 쓰레드의 상태<br>Abort()메서드를 호출하거나 쓰레드가 실행중인 메서드가 종료 되면 이상태가 됨                                                                                                                                                                                                                                                       |
+| Background    | 쓰레드가 백그라운드로 동작하고 있음을 나타냄<br>Foreground쓰레드는 하나라도 살아있는 한 프로세스는 죽지 않지만 백그라운드는 하나가 아니라 열개가 살아있어도 프로세스가 죽고 사는데는 영향을 미치지 않음<br>하지만 프로세스가 죽으면 백그라운드 쓰레드들도 모두 죽는다<br>Thread.IsBackground속성에 true값을 입력 함으로써 쓰레드를 이 상태로 만들수 있음. |
+
+참고: https://docs.microsoft.com/en-us/dotnet/api/system.threading.threadstate?redirectedfrom=MSDN&view=net-5.0
+
+<img src="./img/thread_life_cycle.png" alt="thread_life_cycle"></img>
+
+Aborted상태의 쓰레드는 Running상태로 전이 되지 못한다.  
+Running상태의 쓰레드는 Unstarted상태로 바뀔수 없다.  
+Background상태로 전이 하는 과정이 없는 이유는 쓰레드의 동작일뿐이기 때문이다 (다른 쓰레드는 어떠한 상황)
+
+ThreadState열거형 맴버에 대해 알야아 한다
+Flags 속성을 가지고 있다 Flags는 자신이 수식하는 열거형 비트필드 (플래그 집합)으로 처리 할수 있음을 나타낸다
+
+> 비트필드는 C언어등에서 구조체를 선언할때 바이트 단위가 아닌 비트 단위로 선언한 필드를 말한다<br>
+> 메모리 가격과 용량을 생각해 당시 (1970년 C언어가 만들어졌을 시기) 충분한 이유일수 있다<br>
+> 2002년에 개발된 C#언어는 메모리나 프로세스 용량이 풍부해진 시대에 태어났지만 우수 비트 필드 사용사례를 이용할수 있게 속성으로 존재 하는것이다.<br>
+
+https://docs.microsoft.com/ko-kr/dotnet/api/system.flagsattribute?view=net-5.0
+
+```C#
+using System;
+using System.Threading;
+
+namespace thread
+{
+    class Program
+    {
+        [Flags]
+        public enum MyEnum
+        {
+            Apple = 0,
+            Orange = 1,
+            Kiwi = 2,
+            Mango = 4
+        }
+
+        static void Main(string[] args)
+        {
+            Console.WriteLine((MyEnum)0);
+            Console.WriteLine((MyEnum)1);
+            Console.WriteLine((MyEnum)2);
+            Console.WriteLine((MyEnum)3);
+            Console.WriteLine((MyEnum)4);
+            Console.WriteLine((MyEnum)5);
+        }
+    }
+}
+```
+
+<img src="./img/flags.png" alt="flags"></img>
+
+쓰레드는 동시에 두가지 상태를 가질수 있다  
+Suspended이면서 WaitSleepJoin상태를 가질수 있으며 Background상태이면서 Stopped상태일수 있다  
+그래서 ThreadState는 두가지 이상의 상태를 동시에 표현하기 위해 Flags속성이 수식되어 있는것이다
