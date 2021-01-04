@@ -112,3 +112,190 @@ namespace thread
 ```
 
 실제 쓰레드가 메모리에 적재 되는 시점은 t1.Start() 메서드를 호출 하는 시점이다
+Thread 클래스의 인스턴스는 준비만 해둘뿐이다  
+t1.Start() 메서드가 호출되고 나면 CRL은 쓰레드를 실제로 생성하여 SayHello 메서드를 호출 한다  
+t1.Join() 메서드는 블록되어 있다가 SayHello()메서드의 실행이 끝나면 (t1쓰레드의 실행이 끝나면) 반환되어 다음 코드를 실행 할수 있게 한다
+
+t1쓰레드가 실행되어 메인 쓰레드에서 분리 된다  
+Join()메서드를 실행하여 쓰레드가 완전히 정지 할대까지 대기 한다  
+Join()메서드가 반환되고 나면 프로그램의 흐름은 다시 메인 쓰레드로 합쳐진다
+
+```C#
+using System;
+using System.Threading;
+
+namespace thread
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Thread t1 = new Thread(new ThreadStart(Program.DoSomething));
+
+            Console.WriteLine("thread start...");
+
+            t1.Start();
+
+            for (int i = 0; i < 5; i++)
+            {
+                Console.WriteLine("Main : {0}", i);
+                Thread.Sleep(10);
+            }
+
+            Console.WriteLine("wait until thread stops...");
+
+            t1.Join();
+
+            Console.WriteLine("finished");
+
+        }
+
+        static void DoSomething()
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                Console.WriteLine("DoSomethung: {0}", i);
+                Thread.Sleep(10);
+            }
+        }
+    }
+}
+```
+
+<img src="./thread.png" alt="thread"></img>
+
+쓰레드 임의 종료 시키기
+
+프로세스는 사용자가 작업 관리자 등을 이용해 임의로 종료 시킬수 있다  
+프로세스안에서 동작하는 각 쓰레드는 작업관리자에서 종료 할수 없다  
+쓰레드를 종료 시키기 위해서는 음과 같이 Abort()메서드를 호출 해야 한다
+
+```C#
+using System;
+using System.Threading;
+
+namespace thread
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Thread t1 = new Thread(new ThreadStart(Program.DoSomething));
+            t1.Start();
+            t1.Abort(); //Thread 종료
+            t1.Join();
+        }
+
+        static void DoSomething()
+        {
+            try
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    Console.WriteLine("DoSomething: {0}", i);
+                }
+            }
+            catch (ThreadAbortException e)
+            {
+
+            }
+            finally
+            {
+
+            }
+
+
+        }
+    }
+}
+```
+
+Abort()메서드를 호출 한다고 즉시 쓰레드가 종료 되지 않는다는것이다
+Abort()메서드를 호출하면 CLR은 해당 스레드가 실행중이던 코드에 ThreadAbortException을 호출 한다
+
+다음을 참고 한다  
+https://docs.microsoft.com/ko-kr/dotnet/standard/threading/pausing-and-resuming-threads
+https://docs.microsoft.com/ko-kr/dotnet/api/system.threading.threadabortexception?view=net-5.0
+
+> Thread.Abort는 대기 상태에서 스레드를 깨우고 스레드에서 ThreadAbortException을 throw합니다. 자세한 내용은 스레드 제거를 참조하세요.
+> 이 예외를 catch하는 코드가 있으면 예외를 처리한다음 finally 블록까지 실행한후에 해당 쓰레드는 완전히 종료 된다
+
+t1.Start() : t1쓰레드가 실행되어 메인쓰레드에서 분기 된다.  
+t1.Abort() : Abort()메서드를 실행하여 쓰레드 정지를 시도 한다.  
+t1.Join() : Join()메서드를 실행하여 쓰레드가 완전히 정지 할대까지 대기 한다.  
+Join()메서드가 반환대고 나면 프로그램의 흐름은 다시 메인 쓰레드 하나로 합쳐진다.
+
+_Thread.Abort() 메서드는 사용하지 않는것이 좋다._
+
+예를들어 한 쓰레드가 독점한 자원에서 그 자원을 해제 하지 못하고 Abort()메서드에 의해 정지를 시도 한다면 다른 쓰레드들은 그 자원을 사용할수 없게 된다.
+대안은 해당 쓰레드의 기능을 계속 수행 할것인지에 대한 상태를 다른 쓰레드들과 공유 하고 그 상태를 외부 쓰레드에서 관리 하도록 한다.
+
+```C#
+using System;
+using System.Threading;
+
+public class SideTask
+{
+    int count;
+
+    //constructor
+    public SideTask(int count)
+    {
+        this.count = count;
+    }
+
+    public void KeepAlive()
+    {
+        try
+        {
+            while (count > 0)
+            {
+                Console.WriteLine("{0} left", count--);
+                Thread.Sleep(10);
+            }
+            Console.WriteLine("count: {0}", 0);
+        }
+        catch (ThreadAbortException e)
+        {
+            Console.WriteLine(e);
+            Thread.ResetAbort();
+        }
+        finally
+        {
+            Console.WriteLine("Clearing resources...");
+        }
+    }
+}
+```
+
+```C#
+using System;
+using System.Threading;
+
+namespace thread
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            SideTask task = new SideTask(100);
+            Thread t1 = new Thread(new ThreadStart(task.KeepAlive));
+            t1.IsBackground = false;
+
+            Console.WriteLine("Starting Thread...");
+            t1.Start();
+
+            Thread.Sleep(100);
+
+            Console.WriteLine("Aborting thread...");
+            t1.Abort();
+
+            Console.WriteLine("Waiting until thread stops...");
+            t1.Join();
+
+            Console.WriteLine("finished.");
+        }
+    }
+}
+
+```
