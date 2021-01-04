@@ -162,7 +162,7 @@ namespace thread
 }
 ```
 
-<img src="./thread.png" alt="thread"></img>
+<img src="./img/thread.png" alt="thread"></img>
 
 쓰레드 임의 종료 시키기
 
@@ -300,7 +300,7 @@ namespace thread
 
 ```
 
-<img src="./thread_01.png" alt="thread"></img><br>
+<img src="./img/thread_01.png" alt="thread"></img><br>
 
 ## Thread의 생명주기
 
