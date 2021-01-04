@@ -299,3 +299,16 @@ namespace thread
 }
 
 ```
+
+<img src="./thread_01.png" alt="thread"></img><br>
+
+## Thread의 생명주기
+
+| 상태          | 설명                                                                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unstarted     | 쓰레드 객체를 생성한후 Thread.Start()메서드가 호출되기 전 상태                                                                                                                   |
+| Running       | 쓰레드가 시작하여 동작중인 상태<br> Unstarted상태의 쓰레드를 Thread.Start()메서드를 통해 이 상태로 만들수 있음                                                                   |
+| Suspended     | 쓰레드의 일시 중단 상태<br>쓰레드를 Thread.Suspended()메서드를통해 이상태로 만들수 있음<br> Suspended상태인 쓰레드는 Thread.Resume()메서드를 통해 다시 Running상태로 만들수 있음 |
+| WaitSleepJoin | 쓰레드가 블록(Block)된 상태<br>Monitor.Enter(), Thread.Sleep(), Thread.Join()메서드를 호출하면 이상태가 됨                                                                       |
+| Aborted       | 쓰레드가 취소된 상태<br>Aborted된 쓰레드는 다시 Stopped상태로 전환되어 완전히 중지 한다.                                                                                         |
+| Stopped       | 중지된 쓰레드의 상태<br>Abort()메서드를 호출하거나 쓰레드가 실행중인 메서드가 종료 되면 이상태가 됨                                                                              |
