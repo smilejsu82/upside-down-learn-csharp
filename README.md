@@ -81,3 +81,34 @@ namespace ipc_client
 }
 
 ```
+
+1. Thread 인스턴스 생성 (매개변수로 쓰레드가 실행할 메서드)
+2. Thread.Start() 메서드 호출
+3. Thread.Join() 메서드 호출 하여 쓰레드가 끝날때까지 대기
+
+https://docs.microsoft.com/ko-kr/dotnet/api/system.threading.thread?view=net-5.0
+
+```C#
+using System;
+using System.Threading;
+
+namespace thread
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Thread t1 = new Thread(new ThreadStart(SayHello));
+            t1.Start();
+            t1.Join();
+        }
+
+        static void SayHello()
+        {
+            Console.WriteLine("Hello World!");
+        }
+    }
+}
+```
+
+실제 쓰레드가 메모리에 적재 되는 시점은 t1.Start() 메서드를 호출 하는 시점이다
