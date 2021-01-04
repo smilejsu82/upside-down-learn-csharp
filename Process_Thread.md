@@ -364,3 +364,36 @@ namespace thread
 쓰레드는 동시에 두가지 상태를 가질수 있다  
 Suspended이면서 WaitSleepJoin상태를 가질수 있으며 Background상태이면서 Stopped상태일수 있다  
 그래서 ThreadState는 두가지 이상의 상태를 동시에 표현하기 위해 Flags속성이 수식되어 있는것이다
+
+<img src="./img/thread_state.png" alt="thread_state"></img>
+
+```C#
+using System;
+using System.Threading;
+
+namespace thread
+{
+    class Program
+    {
+        static void PrintThreadState(ThreadState state) {
+            Console.WriteLine("{0,-16} : {1}", state, (int)state);
+        }
+
+        static void Main(string[] args)
+        {
+            PrintThreadState(ThreadState.Running);
+            PrintThreadState(ThreadState.StopRequested);
+            PrintThreadState(ThreadState.SuspendRequested);
+            PrintThreadState(ThreadState.Background);
+            PrintThreadState(ThreadState.Unstarted);
+            PrintThreadState(ThreadState.Stopped);
+            PrintThreadState(ThreadState.WaitSleepJoin);
+            PrintThreadState(ThreadState.Suspended);
+            PrintThreadState(ThreadState.AbortRequested);
+            PrintThreadState(ThreadState.Aborted);
+        }
+    }
+}
+```
+
+<img src="./img/thread_state_result.png" alt="thread_state"></img>
